@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import Common.TriviaDataLoader;
+import Common.TriviaQuestion;
 
 public class GameRoom extends Room {
     private Map<String, Integer> playerAnswers = new ConcurrentHashMap<>(); // Tracks player's answer index.
@@ -45,17 +46,17 @@ public class GameRoom extends Room {
     }
 
     private void endRound() {
-        // Handle the end of the round, such as scoring and preparing for the next question
-        // jeo29/March31,2024: Code to manage end of the round, including checking if any player has won.
+        // Scoring and preparing for the next question
+        // jeo29/March31,2024: Check if any player has won.
         
         checkForWinners(); // jeo29/March31,2024: Checking for any winners based on score.
     }
 
     private void checkForWinners() {
-        // Example logic to determine if someone has won, needs actual score tracking implementation
-        // jeo29/March31,2024: Implementing logic to check for game end condition based on scores.
+        //Tracking if there is a winner
+        // jeo29/March31,2024:Check the game and provide scores
         
-        Map<String, Integer> scores = new HashMap<>(); // This should be actually tracked after each round based on correct answers.
+        Map<String, Integer> scores = new HashMap<>(); // Tracking after each round based on correct answers.
         boolean gameEnded = scores.entrySet().stream().anyMatch(entry -> entry.getValue() >= winningScore);
         
         if (gameEnded) {
@@ -68,5 +69,5 @@ public class GameRoom extends Room {
         }
     }
     
-    // Override or add methods to handle broadcasting and client communication as necessary.
+   
 }

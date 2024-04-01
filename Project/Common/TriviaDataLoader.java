@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import Server.TriviaQuestion;
-
 public class TriviaDataLoader {
     private Map<String, List<TriviaQuestion>> categories = new HashMap<>();
     private Random random = new Random();
