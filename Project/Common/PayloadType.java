@@ -1,5 +1,7 @@
-package Server; // Corrected package declaration - jeo29/March31,2024
+package Project.common;
 
 public enum PayloadType {
-    CONNECT, DISCONNECT, MESSAGE, READY, PICK, PASS, SCORE, QUESTION // Added game-related payload types - jeo29/March31,2024
+    CONNECT, DISCONNECT, MESSAGE, CLIENT_ID, RESET_USER_LIST,
+    SYNC_CLIENT, CREATE_ROOM, JOIN_ROOM, GET_ROOMS,
+    READY, COMMAND
 }
