@@ -9,7 +9,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.util.List;
+import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,26 +22,26 @@ import Project.Client.Views.ChatPanel;
 import Project.Client.Views.ConnectionPanel;
 import Project.Client.Views.Menu;
 import Project.Client.Views.RoomsPanel;
-import Project.Client.Views.UserDetailsPanel;
+import Project.Client.Views.UserInputPanel;
 import Project.Common.Constants;
 
 public class ClientUI extends JFrame implements IClientEvents, ICardControls {
-    private CardLayout card = null;// accessible so we can call next() and previous()
-    private Container container;// accessible to be passed to card methods
-    private String originalTitle = null;
+    CardLayout card = null;// accessible so we can call next() and previous()
+    Container container;// accessible to be passed to card methods
+    String originalTitle = null;
     private static Logger logger = Logger.getLogger(ClientUI.class.getName());
     private JPanel currentCardPanel = null;
-    private CardView currentCard = CardView.CONNECT;
+    private Card currentCard = Card.CONNECT;
 
-    // private Hashtable<Long, String> userList = new Hashtable<Long, String>();
+    private Hashtable<Long, String> userList = new Hashtable<Long, String>();
 
     private long myId = Constants.DEFAULT_CLIENT_ID;
     private JMenuBar menu;
     // Panels
     private ConnectionPanel csPanel;
-    private UserDetailsPanel userDetailsPanel;
-    private ChatPanel chatPanel;
+    private UserInputPanel inputPanel;
     private RoomsPanel roomsPanel;
+    private ChatPanel chatPanel;
 
     public ClientUI(String title) {
         super(title);// call the parent's constructor
@@ -62,8 +62,8 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
                 // System.out.println("Moved to " + e.getComponent().getLocation());
             }
         });
-
-        setMinimumSize(new Dimension(400, 400));
+        
+        setMinimumSize(new Dimension(800, 300));
         // centers window
         setLocationRelativeTo(null);
         card = new CardLayout();
@@ -73,10 +73,11 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         this.setJMenuBar(menu);
         // separate views
         csPanel = new ConnectionPanel(this);
-        userDetailsPanel = new UserDetailsPanel(this);
+        inputPanel = new UserInputPanel(this);
         chatPanel = new ChatPanel(this);
-
+        
         roomsPanel = new RoomsPanel(this);
+
 
         // https://stackoverflow.com/a/9093526
         // this tells the x button what to do (updated to be controlled via a prompt)
@@ -85,9 +86,9 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
             @Override
             public void windowClosing(WindowEvent windowEvent) {
                 int response = JOptionPane.showConfirmDialog(container,
-                        "Are you sure you want to close this window?", "Close Window?",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
+                "Are you sure you want to close this window?", "Close Window?",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
                 if (response == JOptionPane.YES_OPTION) {
                     try {
                         Client.INSTANCE.sendDisconnect();
@@ -102,22 +103,20 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         pack();// tells the window to resize itself and do the layout management
         setVisible(true);
     }
-
-    private void findAndSetCurrentPanel() {
+    void findAndSetCurrentPanel(){
         for (Component c : container.getComponents()) {
             if (c.isVisible()) {
                 currentCardPanel = (JPanel) c;
-                currentCard = Enum.valueOf(CardView.class, currentCardPanel.getName());
-                // if we're not connected don't access anything that requires a connection
-                if (myId == Constants.DEFAULT_CLIENT_ID && currentCard.ordinal() >= CardView.CHAT.ordinal()) {
-                    show(CardView.CONNECT.name());
+                currentCard = Enum.valueOf(Card.class, currentCardPanel.getName());
+                //if we're not connected don't access anything that requires a connection
+                if(myId == Constants.DEFAULT_CLIENT_ID && currentCard.ordinal() >= Card.CHAT.ordinal()){
+                    show(Card.CONNECT.name());
                 }
                 break;
             }
         }
         System.out.println(currentCardPanel.getName());
     }
-
     @Override
     public void next() {
         card.next(container);
@@ -127,7 +126,7 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     @Override
     public void previous() {
         card.previous(container);
-        findAndSetCurrentPanel();
+        
     }
 
     @Override
@@ -143,34 +142,47 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
 
     @Override
     public void connect() {
-        String username = userDetailsPanel.getUsername();
+        String username = inputPanel.getUsername();
         String host = csPanel.getHost();
         int port = csPanel.getPort();
         setTitle(originalTitle + " - " + username);
         Client.INSTANCE.connect(host, port, username, this);
-        // TODO add connecting screen/notice
+        //TODO add connecting screen/notice
     }
 
     public static void main(String[] args) {
         new ClientUI("Client");
     }
 
-    @Override
-    public void onClientConnect(long clientId, String clientName, String message) {
-        if (currentCard.ordinal() >= CardView.CHAT.ordinal()) {
-
-            chatPanel.addUserListItem(clientId, String.format("%s (%s)", clientName, clientId));
-            chatPanel.addText(String.format("*%s %s*", clientName, message));
-
+    private String mapClientId(long clientId) {
+        String clientName = userList.get(clientId);
+        if (clientName == null) {
+            clientName = "Server";
         }
+        return clientName;
     }
 
-    @Override
-    public void onClientDisconnect(long clientId, String clientName, String message) {
-        if (currentCard.ordinal() >= CardView.CHAT.ordinal()) {
-
-            chatPanel.removeUserListItem(clientId);
-            chatPanel.addText(String.format("*%s %s*", clientName, message));
+    /**
+     * Used to handle new client connects/disconnects or existing client lists (one
+     * by one)
+     * 
+     * @param clientId
+     * @param clientName
+     * @param isConnect
+     */
+    private synchronized void processClientConnectionStatus(long clientId, String clientName, boolean isConnect) {
+        if (isConnect) {
+            if (!userList.containsKey(clientId)) {
+                logger.log(Level.INFO, String.format("Adding %s[%s]", clientName, clientId));
+                userList.put(clientId, clientName);
+                chatPanel.addUserListItem(clientId, String.format("%s (%s)", clientName, clientId));
+            }
+        } else {
+            if (userList.containsKey(clientId)) {
+                logger.log(Level.INFO, String.format("Removing %s[%s]", clientName, clientId));
+                userList.remove(clientId);
+                chatPanel.removeUserListItem(clientId);
+            }
             if (clientId == myId) {
                 logger.log(Level.INFO, "I disconnected");
                 myId = Constants.DEFAULT_CLIENT_ID;
@@ -180,9 +192,25 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     }
 
     @Override
+    public void onClientConnect(long clientId, String clientName, String message) {
+        if (currentCard.ordinal() >= Card.CHAT.ordinal()) {
+            processClientConnectionStatus(clientId, clientName, true);
+            chatPanel.addText(String.format("*%s %s*", clientName, message));
+        }
+    }
+
+    @Override
+    public void onClientDisconnect(long clientId, String clientName, String message) {
+        if (currentCard.ordinal() >= Card.CHAT.ordinal()) {
+            processClientConnectionStatus(clientId, clientName, false);
+            chatPanel.addText(String.format("*%s %s*", clientName, message));
+        }
+    }
+
+    @Override
     public void onMessageReceive(long clientId, String message) {
-        if (currentCard.ordinal() >= CardView.CHAT.ordinal()) {
-            String clientName = Client.INSTANCE.getClientNameFromId(clientId);
+        if (currentCard.ordinal() >= Card.CHAT.ordinal()) {
+            String clientName = mapClientId(clientId);
             chatPanel.addText(String.format("%s: %s", clientName, message));
         }
     }
@@ -191,7 +219,7 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     public void onReceiveClientId(long id) {
         if (myId == Constants.DEFAULT_CLIENT_ID) {
             myId = id;
-            show(CardView.CHAT.name());
+            show(Card.CHAT.name());
         } else {
             logger.log(Level.WARNING, "Received client id after already being set, this shouldn't happen");
         }
@@ -199,18 +227,19 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
 
     @Override
     public void onResetUserList() {
+        userList.clear();
         chatPanel.clearUserList();
     }
 
     @Override
     public void onSyncClient(long clientId, String clientName) {
-        if (currentCard.ordinal() >= CardView.CHAT.ordinal()) {
-            chatPanel.addUserListItem(clientId, String.format("%s (%s)", clientName, clientId));
+        if (currentCard.ordinal() >= Card.CHAT.ordinal()) {
+            processClientConnectionStatus(clientId, clientName, true);
         }
     }
 
     @Override
-    public void onReceiveRoomList(List<String> rooms, String message) {
+    public void onReceiveRoomList(String[] rooms, String message) {
         roomsPanel.removeAllRooms();
         if (message != null && message.length() > 0) {
             roomsPanel.setMessage(message);
@@ -224,8 +253,20 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
 
     @Override
     public void onRoomJoin(String roomName) {
-        if (currentCard.ordinal() >= CardView.CHAT.ordinal()) {
+        if (currentCard.ordinal() >= Card.CHAT.ordinal()) {
             chatPanel.addText("Joined room " + roomName);
         }
+    }
+
+
+    //method for highlight feature
+    @Override
+    public void recentUser(long clientId){
+        chatPanel.recentUser(clientId);
+    }
+    @Override
+    public void chatH() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'chatH'");
     }
 }

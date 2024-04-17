@@ -23,7 +23,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 
-import Project.Client.CardView;
+import Project.Client.Card;
 import Project.Client.Client;
 import Project.Client.ClientUtils;
 import Project.Client.ICardControls;
@@ -55,7 +55,9 @@ public class ChatPanel extends JPanel {
         JTextField textValue = new JTextField();
         input.add(textValue);
         JButton button = new JButton("Send");
-        // lets us submit with the enter key instead of just the button click
+        // Enter Key Activation
+        // UCID: jeo29
+        //DATE: April 14, 2024
         textValue.addKeyListener(new KeyListener() {
 
             @Override
@@ -76,6 +78,7 @@ public class ChatPanel extends JPanel {
             }
 
         });
+
         button.addActionListener((event) -> {
             try {
                 String text = textValue.getText().trim();
@@ -96,16 +99,16 @@ public class ChatPanel extends JPanel {
         });
         chatArea = content;
         input.add(button);
-        userListPanel = new UserListPanel();
+
+        userListPanel = new UserListPanel(controls);
         this.add(userListPanel, BorderLayout.EAST);
         this.add(input, BorderLayout.SOUTH);
-        this.setName(CardView.CHAT.name());
-        controls.addPanel(CardView.CHAT.name(), this);
+        this.setName(Card.CHAT.name());
+        controls.addPanel(Card.CHAT.name(), this);
         chatArea.addContainerListener(new ContainerListener() {
 
             @Override
             public void componentAdded(ContainerEvent e) {
-
                 if (chatArea.isVisible()) {
                     chatArea.revalidate();
                     chatArea.repaint();
@@ -154,10 +157,14 @@ public class ChatPanel extends JPanel {
         userListPanel.clearUserList();
     }
 
+    public void recentUser(long clientId) {
+        userListPanel.recentUser(clientId);
+    }
+
     public void addText(String text) {
         JPanel content = chatArea;
         // add message
-        JEditorPane textContainer = new JEditorPane("text/plain", text);
+        JEditorPane textContainer = new JEditorPane("text/html", text);
 
         // sizes the panel to attempt to take up the width of the container
         // and expand in height based on word wrapping

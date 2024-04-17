@@ -1,15 +1,15 @@
 package Project.Client.Views;
 
-import java.awt.BorderLayout;
-
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import Project.Client.CardView;
+import Project.Client.Card;
 import Project.Client.ICardControls;
+
+import java.awt.BorderLayout;
 
 public class ConnectionPanel extends JPanel {
     private String host;
@@ -62,8 +62,8 @@ public class ConnectionPanel extends JPanel {
         this.add(new JPanel(), BorderLayout.SOUTH);
         // add the content to the center slot
         this.add(content, BorderLayout.CENTER);
-        this.setName(CardView.CONNECT.name());
-        controls.addPanel(CardView.CONNECT.name(), this);
+        this.setName(Card.CONNECT.name());
+        controls.addPanel(Card.CONNECT.name(), this);
     }
 
     public String getHost() {

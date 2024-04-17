@@ -20,14 +20,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 
-import Project.Client.CardView;
+import Project.Client.Card;
 import Project.Client.Client;
 import Project.Client.ICardControls;
 
 public class RoomsPanel extends JPanel {
-    private JPanel container;
-    private List<RoomListItem> rooms = new ArrayList<RoomListItem>();
-    private JLabel message;
+    JPanel container;
+    List<RoomListItem> rooms = new ArrayList<RoomListItem>();
+    JLabel message;
     private static Logger logger = Logger.getLogger(RoomsPanel.class.getName());
 
     public RoomsPanel(ICardControls controls) {
@@ -60,12 +60,13 @@ public class RoomsPanel extends JPanel {
                 String query = searchValue.getText().trim();
                 if (query.length() > 0) {
                     removeAllRooms();
-                    Client.INSTANCE.sendListRooms(query);
+                    Client.INSTANCE.sendGetRooms(query);
                     message.setText("Sent query");
                 } else {
                     message.setText("Can't search with an empty query");
                 }
             } catch (IOException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
                 message.setText("Error sending request: " + e.getMessage());
             }
@@ -81,6 +82,7 @@ public class RoomsPanel extends JPanel {
                     message.setText("Can't create a room without a name");
                 }
             } catch (IOException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
                 message.setText("Error sending request: " + e.getMessage());
             }
@@ -98,6 +100,7 @@ public class RoomsPanel extends JPanel {
             } catch (NullPointerException ne) {
                 message.setText("Not connected");
             } catch (IOException e) {
+                // TODO Auto-generated catch block
                 logger.log(Level.WARNING, "Not connected");
                 e.printStackTrace();
                 message.setText("Error sending request: " + e.getMessage());
@@ -133,8 +136,8 @@ public class RoomsPanel extends JPanel {
             }
 
         });
-        this.setName(CardView.ROOMS.name());
-        controls.addPanel(CardView.ROOMS.name(), this);
+        this.setName(Card.ROOMS.name());
+        controls.addPanel(Card.ROOMS.name(), this);
     }
 
     public void setMessage(String message) {
@@ -144,7 +147,7 @@ public class RoomsPanel extends JPanel {
     public void addRoom(String room) {
         if (room != null) {
             System.out.println("Adding: " + room);
-            RoomListItem r = new RoomListItem(room, this::handleSelection);
+            RoomListItem r = new RoomListItem(room, (String roomName) -> handleSelection(roomName));
             Dimension size = new Dimension(this.getSize().width, 40);
             r.setPreferredSize(size);
             r.setMaximumSize(size);
@@ -183,6 +186,7 @@ public class RoomsPanel extends JPanel {
         try {
             Client.INSTANCE.sendJoinRoom(room);
         } catch (IOException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

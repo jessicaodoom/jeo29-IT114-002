@@ -1,6 +1,7 @@
 package Project.Client.Views;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ContainerEvent;
@@ -15,12 +16,13 @@ import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
 import Project.Client.ClientUtils;
+import Project.Client.ICardControls;
 
 public class UserListPanel extends JPanel {
-    private JPanel userListArea;
+    JPanel userListArea;
     private static Logger logger = Logger.getLogger(UserListPanel.class.getName());
 
-    public UserListPanel() {
+    public UserListPanel(ICardControls controls) {
         super(new BorderLayout(10, 10));
         JPanel wrapper = new JPanel();
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
@@ -60,6 +62,18 @@ public class UserListPanel extends JPanel {
 
         });
     }
+    protected void recentUser(long clientId) {
+        Component [] cs = userListArea.getComponents();
+        for (Component c : cs) {
+            if (c.getName( ).equals(clientId + "")) {
+                    c.setForeground(Color.RED);
+                break;
+            }
+            else{
+                c.setForeground(Color.BLACK);
+            }
+        }
+    }
 
     protected void addUserListItem(long clientId, String clientName) {
         logger.log(Level.INFO, "Adding user to list: " + clientName);
@@ -98,4 +112,11 @@ public class UserListPanel extends JPanel {
             userListArea.remove(c);
         }
     }
+    public void resizeUserListItems() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'resizeUserListItems'");
+    }
+
+
+    
 }

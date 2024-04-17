@@ -3,17 +3,6 @@ package Project.Common;
 import java.io.Serializable;
 
 public class Payload implements Serializable {
-
-    private long clientId;
-
-    public long getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(long clientId) {
-        this.clientId = clientId;
-    }
-
     // read https://www.baeldung.com/java-serial-version-uid
     private static final long serialVersionUID = 1L;// change this if the class changes
 
@@ -30,7 +19,28 @@ public class Payload implements Serializable {
         this.payloadType = payloadType;
     }
 
+    /**
+     * Who the payload is from
+     */
+    private String clientName;
 
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    private long clientId;
+
+    public long getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(long clientId) {
+        this.clientId = clientId;
+    }
 
     /**
      * Generic text based message
@@ -45,10 +55,10 @@ public class Payload implements Serializable {
         this.message = message;
     }
 
-
     @Override
     public String toString() {
-        return String.format("Type[%s], Message[%s], ClientId[%s]", getPayloadType().toString(),
-                getMessage(), getClientId());
+        return String.format("Type[%s],ClientId[%s,] ClientName[%s], Message[%s]", getPayloadType().toString(),
+                getClientId(), getClientName(),
+                getMessage());
     }
 }
